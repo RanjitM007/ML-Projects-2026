@@ -1,0 +1,15 @@
+# Secrets — never commit your real key
+.env
+
+# Data (raw/processed) — too large + may contain pulled records
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Notebooks / OS junk
+.ipynb_checkpoints/
+.DS_Store
