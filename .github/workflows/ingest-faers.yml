@@ -1,16 +1,18 @@
 name: Ingest FAERS data
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:          # manual "Run workflow" button
+  push:
+    branches: [main]          # merge/push to main -> triggers the job
   schedule:
-    - cron: "0 6 1 * *"     # 06:00 UTC, 1st of each month
+    - cron: "0 6 1 * *"       # also monthly auto-refresh
 
 permissions:
-  contents: write            # needed so the action can commit the zip back
+  contents: write             # so the action can commit the zip back
 
 jobs:
   ingest:
-    runs-on: ubuntu-latest   # clean network -> no corporate SSL issues
+    runs-on: ubuntu-latest    # clean network -> no corporate SSL issues
 
     steps:
       - name: Checkout repo
@@ -24,17 +26,15 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Download smallest FAERS partition (zip)
-        # Key is injected from GitHub Secrets. The bulk-zip script doesn't need
-        # it, but the API-based script (os.getenv("OPENFDA_API_KEY")) will use it.
+      - name: Download FAERS data
         env:
           OPENFDA_API_KEY: ${{ secrets.OPENFDA_API_KEY }}
-        run: python src/01_ingest_fears.py
+        run: python 01_ingest_fears.py
 
-      - name: Commit zip to repo
+      - name: Commit data to repo
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f data/raw/faers/*.json.zip
-          git diff --staged --quiet || git commit -m "Update FAERS raw data [skip ci]"
+          git diff --staged --quiet || git commit -m "Update FAERS data [skip ci]"
           git push
